@@ -21,23 +21,21 @@ jobs:
       - name: Install dependencies
         run: npm install --omit=optional --ignore-scripts
 
-      # Remove existing android folder if present
       - name: Clean up android folder
         run: rm -rf android/
 
-      # Add Android platform fresh
       - name: Add Android platform
         run: npx cap add android
 
-      # Sync Capacitor (copies web assets into Android project)
       - name: Sync Capacitor
         run: npx cap sync
 
-      - name: Setup Java
+      # 🔥 FIX: Use Java 21 instead of 17
+      - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
