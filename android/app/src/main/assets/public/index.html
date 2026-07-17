@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>🍥 Subaru</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="row">
+      <span>🍥 subaru</span>
+      <button id="darkToggle">☾ dark</button>
+    </header>
+
+    <!-- Watch -->
+    <canvas id="watch" width="500" height="500"></canvas>
+
+    <!-- Knobs -->
+    <div class="row knobs">
+      <div class="group">
+        <button id="modeHeb" class="active">עברית</button>
+        <button id="modeGk">Ελληνικά</button>
+      </div>
+      <div class="group">
+        <button id="playBtn" class="active">▶</button>
+        <button id="stopBtn">⏸</button>
+      </div>
+    </div>
+
+    <!-- Glyph Square (like overlaps) -->
+    <div class="glyph-square">
+      <div class="glyph-large" id="currentGlyph">ג</div>
+      <div class="glyph-name" id="currentGlyphName">Gimel</div>
+      <div class="glyph-meaning" id="currentGlyphMeaning">Cosmic Nourishment</div>
+      <div class="glyph-time" id="currentGlyphTime">2:10:54</div>
+    </div>
+
+    <!-- Subaru Echo -->
+    <div class="subaru-echo">
+      <span>⚡ subaru · </span>
+      <span class="subaru-word" id="subaruWord">א Α A ג</span>
+      <span id="subaruState"> · 178/s</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="row">
+      <span>22·24</span>
+      <span>3927.27s</span>
+      <span>0.336s</span>
+      <span>✦ freeze to read</span>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
