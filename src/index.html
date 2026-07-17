@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🍥 Subaru · Sacred Portals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🍥 Subaru · Portal Clock</title>
     <style>
         /* ----- yusdesign B&W core ----- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         :root {
@@ -19,6 +20,8 @@
             --accent: #334155;
             --subaru: #64748b;
             --shadow: rgba(0, 0, 0, 0.05);
+            --modal-bg: rgba(15, 23, 42, 0.6);
+            --radius: 16px;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -29,6 +32,7 @@
                 --accent: #94a3b8;
                 --subaru: #8193b2;
                 --shadow: rgba(255, 255, 255, 0.05);
+                --modal-bg: rgba(0, 0, 0, 0.7);
             }
         }
 
@@ -36,134 +40,252 @@
             background: var(--bg);
             color: var(--text);
             font-family: 'Courier New', 'SF Mono', monospace;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.2s, color 0.2s;
+            touch-action: none;
+        }
+
+        /* ----- Main UI (full screen) ----- */
+        .main-ui {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.2rem 1.2rem 0.8rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Clock area */
+        .clock-area {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 1rem;
-            transition: background 0.2s, color 0.2s;
+            min-height: 0;
         }
 
-        .container {
-            max-width: 700px;
+        #mainClock {
             width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        /* ----- Header (settings row) ----- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 1rem;
+            max-width: 400px;
+            aspect-ratio: 1/1;
+            display: block;
+            background: var(--bg);
+            border-radius: 50%;
             border: 1px solid var(--border);
-            font-size: 0.8rem;
+            touch-action: none;
         }
 
-        .settings {
+        /* Knobs row */
+        .knobs {
             display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
+            gap: 0.8rem;
+            justify-content: center;
+            margin: 0.8rem 0 0.4rem;
         }
 
-        .settings button,
-        .settings .toggle {
+        .knob {
             background: var(--bg);
             border: 1px solid var(--border);
             color: var(--text);
             font-family: inherit;
-            font-size: 0.7rem;
-            padding: 0.3rem 0.8rem;
+            font-size: 0.8rem;
+            padding: 0.6rem 1.8rem;
+            border-radius: 30px;
             cursor: pointer;
+            transition: all 0.15s;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            transition: all 0.1s;
+            flex: 1;
+            max-width: 160px;
+            text-align: center;
         }
 
-        .settings button.active,
-        .settings .toggle.active {
+        .knob.active {
             background: var(--text);
             color: var(--bg);
             border-color: var(--text);
         }
 
-        .settings button:hover,
-        .settings .toggle:hover {
-            background: var(--border);
+        .knob:active {
+            transform: scale(0.96);
         }
 
-        /* ----- Clock container ----- */
-        .clock-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1/1;
-            border: 1px solid var(--border);
-            background: var(--bg);
-        }
-
-        #mainClock {
-            width: 100%;
-            height: 100%;
-            display: block;
-            background: var(--bg);
-        }
-
-        /* ----- Info panel (below clock) ----- */
-        .info-panel {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 0.5rem;
-            padding: 0.8rem;
-            border: 1px solid var(--border);
-            font-size: 0.9rem;
-        }
-
-        .info-item {
+        /* Caption */
+        .caption {
             text-align: center;
+            padding: 0.4rem 0.0.8rem;
+            min-height: 3.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        .info-item .label {
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            color: var(--subaru);
-            letter-spacing: 1px;
-        }
-
-        .info-item .value {
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .info-item .value.hebrew {
+        .caption .hebrew {
             font-family: 'Times New Roman', serif;
-            font-size: 2rem;
+            font-size: 2.2rem;
+            line-height: 1.2;
         }
 
-        /* ----- Portal list (scrollable) ----- */
-        .portal-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            padding: 0.5rem;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 0.3rem;
+        .caption .name {
+            font-size: 0.85rem;
+            color: var(--subaru);
+            letter-spacing: 0.5px;
         }
 
-        .portal-item {
-            padding: 0.3rem 0.5rem;
-            border: 1px solid var(--border);
+        .caption .time {
             font-size: 0.7rem;
-            text-align: center;
+            color: var(--subaru);
+        }
+
+        /* ----- Pull tab (for modals) ----- */
+        .pull-tab {
+            width: 40px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 4px;
+            margin: 0.4rem auto 0;
+            transition: background 0.2s;
+            touch-action: none;
+        }
+
+        /* ----- Modals (slide-up) ----- */
+        .modal-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            top: 0;
+            background: var(--modal-bg);
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-sheet {
+            background: var(--bg);
+            border-radius: var(--radius) var(--radius) 0 0;
+            width: 100%;
+            max-width: 500px;
+            max-height: 80vh;
+            padding: 1.5rem 1.5rem 2rem;
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -8px 30px var(--shadow);
+        }
+
+        .modal-overlay.open .modal-sheet {
+            transform: translateY(0);
+        }
+
+        .modal-sheet .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            color: var(--text);
             cursor: pointer;
+            padding: 0 0.4rem;
+            line-height: 1;
+        }
+
+        .modal-sheet h2 {
+            font-size: 1.1rem;
+            font-weight: normal;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.6rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        /* Settings items */
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .toggle-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: inherit;
             transition: all 0.1s;
         }
 
-        .portal-item:hover {
+        .toggle-btn.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        .info-text {
+            color: var(--subaru);
+            font-size: 0.7rem;
+            padding: 0.4rem 0;
+        }
+
+        /* Portal list inside modal */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .portal-item {
+            padding: 0.4rem 0.2rem;
+            border: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.7rem;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.1s;
+        }
+
+        .portal-item:active {
             background: var(--border);
+        }
+
+        .portal-item .p-hebrew {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+        }
+        .portal-item .p-time {
+            color: var(--subaru);
+            font-size: 0.6rem;
         }
 
         .portal-item.current {
@@ -172,81 +294,95 @@
             border-color: var(--text);
         }
 
-        .portal-item .hebrew {
-            font-family: 'Times New Roman', serif;
-            font-size: 1.2rem;
+        /* ----- Responsive ----- */
+        @media (max-width: 480px) {
+            .knob {
+                font-size: 0.7rem;
+                padding: 0.5rem 0.8rem;
+            }
+            .caption .hebrew {
+                font-size: 1.8rem;
+            }
+            #mainClock {
+                max-width: 320px;
+            }
         }
 
-        /* ----- Subaru counter (footer) ----- */
-        .subaru-footer {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 1rem;
-            border: 1px solid var(--border);
-            font-size: 0.7rem;
-            color: var(--subaru);
+        /* hide scrollbar */
+        .modal-sheet::-webkit-scrollbar {
+            width: 4px;
         }
-
-        /* ----- Scrollbar ----- */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
+        .modal-sheet::-webkit-scrollbar-track {
             background: var(--bg);
         }
-        ::-webkit-scrollbar-thumb {
+        .modal-sheet::-webkit-scrollbar-thumb {
             background: var(--border);
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--subaru);
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header: settings -->
-        <div class="header">
-            <span>🍥 subaru · portals</span>
-            <div class="settings">
-                <button class="active" id="mode24">24h</button>
-                <button id="mode22">22h</button>
-                <button class="toggle active" id="darkToggle">☾</button>
-            </div>
+
+    <!-- ===== MAIN UI ===== -->
+    <div class="main-ui" id="mainUI">
+        <div class="clock-area">
+            <canvas id="mainClock" width="500" height="500"></canvas>
         </div>
 
-        <!-- Clock -->
-        <div class="clock-wrapper">
-            <canvas id="mainClock" width="600" height="600"></canvas>
+        <div class="knobs">
+            <button class="knob active" id="realBtn">▶ real</button>
+            <button class="knob" id="nextBtn">⏭ next</button>
         </div>
 
-        <!-- Info panel -->
-        <div class="info-panel">
-            <div class="info-item">
-                <div class="label">current portal</div>
-                <div class="value hebrew" id="currentHeb">א</div>
-                <div style="font-size:0.7rem; color:var(--subaru);" id="currentName">Aleph</div>
-            </div>
-            <div class="info-item">
-                <div class="label">next in</div>
-                <div class="value" id="nextCountdown">01:05:27</div>
-            </div>
-            <div class="info-item">
-                <div class="label">subaru</div>
-                <div class="value" id="subaruCounter">0</div>
-                <div style="font-size:0.6rem; color:var(--subaru);">rotations</div>
-            </div>
+        <div class="caption" id="caption">
+            <div class="hebrew" id="currentHeb">א</div>
+            <div class="name" id="currentName">Aleph · Breath</div>
+            <div class="time" id="currentTime">00:00:00</div>
         </div>
 
-        <!-- Portal list -->
-        <div class="portal-list" id="portalList"></div>
+        <div class="pull-tab" id="pullTab"></div>
+    </div>
 
-        <!-- Footer -->
-        <div class="subaru-footer">
-            <span>22·24</span>
-            <span>3927.27s</span>
-            <span>0.336s</span>
-            <span>✦ freeze to read</span>
+    <!-- ===== MODAL OVERLAYS ===== -->
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-sheet">
+            <button class="close-btn" data-close="settingsModal">✕</button>
+            <h2>⚙️ settings</h2>
+            <div class="setting-row">
+                <span>theme</span>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" id="themeLight">☀ light</button>
+                    <button class="toggle-btn" id="themeDark">☾ dark</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span>clock scale</span>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" id="scale24">24h</button>
+                    <button class="toggle-btn" id="scale22">22h</button>
+                </div>
+            </div>
+            <div class="setting-row">
+                <span>subaru hand</span>
+                <span style="color:var(--subaru); font-size:0.8rem;">0.336s · 178/s</span>
+            </div>
+            <div class="setting-row">
+                <span>portal interval</span>
+                <span style="color:var(--subaru); font-size:0.8rem;">3927.27s</span>
+            </div>
+            <div class="info-text">
+                tap clock to freeze · tap again to resume
+            </div>
+        </div>
+    </div>
+
+    <!-- Portals Modal -->
+    <div class="modal-overlay" id="portalsModal">
+        <div class="modal-sheet">
+            <button class="close-btn" data-close="portalsModal">✕</button>
+            <h2>🌀 22 portals</h2>
+            <div class="portal-grid" id="portalGrid"></div>
         </div>
     </div>
 
@@ -255,16 +391,15 @@
             // ----- DATA -----
             const HEBREW = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
             const NAMES = [
-                'Aleph','Bet','Gimel','Dalet','He','Vav','Zayin','Chet','Tet','Yod','Kaf',
-                'Lamed','Mem','Nun','Samekh','Ayin','Pe','Tsadi','Qof','Resh','Shin','Tav'
+                'Aleph · Breath','Bet · House','Gimel · Nourish','Dalet · Door','He · Window',
+                'Vav · Connect','Zayin · Sustain','Chet · Life','Tet · Goodness','Yod · Spark',
+                'Kaf · Crown','Lamed · Teach','Mem · Waters','Nun · Faith','Samekh · Support',
+                'Ayin · Vision','Pe · Mouth','Tsadi · Path','Qof · Holiness','Resh · Mind',
+                'Shin · Fire','Tav · Truth'
             ];
-            const MEANINGS = [
-                'Breath of Creation','House of Divine','Cosmic Nourishment','Doorway to Wisdom',
-                'Window to Heaven','Connecting Above','Sacred Sustenance','Life Force',
-                'Hidden Goodness','Divine Spark','Crown of Manifestation','Teaching Heart',
-                'Waters of Wisdom','Eternal Faithfulness','Divine Support','Inner Vision',
-                'Mouth of Creation','Righteous Path','Holiness in Time','Higher Consciousness',
-                'Fire of Transformation','Completion & Truth'
+            const MEANINGS_SHORT = [
+                'Breath','House','Nourish','Door','Window','Connect','Sustain','Life','Goodness','Spark',
+                'Crown','Teach','Waters','Faith','Support','Vision','Mouth','Path','Holiness','Mind','Fire','Truth'
             ];
 
             // Overlap times (12/11 hour intervals)
@@ -279,7 +414,7 @@
                     index: i,
                     hebrew: HEBREW[i],
                     name: NAMES[i],
-                    meaning: MEANINGS[i],
+                    meaning: MEANINGS_SHORT[i],
                     hours: h,
                     minutes: m,
                     seconds: s,
@@ -295,24 +430,37 @@
             let frozenTime = null;
             let subaruRotations = 0;
             let prevSubaruAngle = 0;
+            let realMode = true; // true = real time, false = next portal mode
+            let realStartTime = performance.now() / 1000;
+            let realOffset = 0; // will be set from Date
 
             // DOM refs
             const canvas = document.getElementById('mainClock');
             const ctx = canvas.getContext('2d');
             const currentHeb = document.getElementById('currentHeb');
             const currentName = document.getElementById('currentName');
-            const nextCountdown = document.getElementById('nextCountdown');
-            const subaruCounter = document.getElementById('subaruCounter');
-            const portalList = document.getElementById('portalList');
-            const mode24 = document.getElementById('mode24');
-            const mode22 = document.getElementById('mode22');
-            const darkToggle = document.getElementById('darkToggle');
+            const currentTime = document.getElementById('currentTime');
+            const realBtn = document.getElementById('realBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pullTab = document.getElementById('pullTab');
+
+            // Modals
+            const settingsModal = document.getElementById('settingsModal');
+            const portalsModal = document.getElementById('portalsModal');
+            const portalGrid = document.getElementById('portalGrid');
+            const closeBtns = document.querySelectorAll('[data-close]');
+
+            // Settings toggles
+            const themeLight = document.getElementById('themeLight');
+            const themeDark = document.getElementById('themeDark');
+            const scale24 = document.getElementById('scale24');
+            const scale22 = document.getElementById('scale22');
 
             // ----- CONSTANTS -----
-            const SUBARU_PERIOD = 0.336; // seconds per rotation
-            const HOUR_24_PERIOD = 12 * 3600; // 12h for hour hand
-            const HOUR_22_PERIOD = 3927.27 * 22; // 22 * your constant
-            const MINUTE_PERIOD = 3600; // 1h
+            const SUBARU_PERIOD = 0.336;
+            const HOUR_24_PERIOD = 12 * 3600;
+            const HOUR_22_PERIOD = 3927.27 * 22;
+            const MINUTE_PERIOD = 3600;
             const SECOND_PERIOD = 60;
 
             // ----- HELPERS -----
@@ -325,23 +473,31 @@
             }
 
             function findNearestOverlap(minutes) {
-                let best = 0;
-                let bestDiff = Infinity;
+                let best = 0, bestDiff = Infinity;
                 for (let i = 0; i < OVERLAPS.length; i++) {
                     const diff = Math.abs(OVERLAPS[i].totalMinutes - minutes);
-                    if (diff < bestDiff) {
-                        bestDiff = diff;
-                        best = i;
-                    }
+                    if (diff < bestDiff) { bestDiff = diff; best = i; }
                 }
                 return best;
             }
 
+            function findNextOverlap(minutes) {
+                for (let i = 0; i < OVERLAPS.length; i++) {
+                    if (OVERLAPS[i].totalMinutes > minutes) return i;
+                }
+                return 0;
+            }
+
             function formatTime(seconds) {
-                const h = Math.floor(seconds / 3600);
+                const h = Math.floor(seconds / 3600) % 24;
                 const m = Math.floor((seconds % 3600) / 60);
                 const s = Math.floor(seconds % 60);
                 return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }
+
+            function getCurrentTimeSeconds() {
+                const now = new Date();
+                return now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds() + now.getMilliseconds() / 1000;
             }
 
             // ----- DRAWING -----
@@ -353,7 +509,7 @@
 
                 ctx.clearRect(0, 0, w, h);
 
-                // background
+                // bg
                 ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
                 ctx.fillRect(0, 0, w, h);
 
@@ -364,10 +520,31 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // 22 marks (Hebrew letters)
+                // 22 marks (Hebrew letters) — highlight current segment
                 const count = 22;
+                const nowMinutes = (t % 86400) / 60;
+                const nearestIdx = findNearestOverlap(nowMinutes);
+                const nextIdx = (nearestIdx + 1) % 22;
+                const segStart = OVERLAPS[nearestIdx].totalMinutes;
+                let segEnd = OVERLAPS[nextIdx].totalMinutes;
+                if (segEnd < segStart) segEnd += 24 * 60;
+                const progress = (nowMinutes - segStart) / (segEnd - segStart);
+
                 for (let i = 0; i < count; i++) {
                     const angle = (i / count) * 2 * Math.PI - Math.PI/2;
+                    const nextAngle = ((i+1) / count) * 2 * Math.PI - Math.PI/2;
+
+                    // highlight current segment
+                    if (i === nearestIdx) {
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.arc(cx, cy, R, angle, nextAngle);
+                        ctx.closePath();
+                        ctx.fillStyle = isDark ? 'rgba(148, 163, 184, 0.15)' : 'rgba(51, 65, 85, 0.10)';
+                        ctx.fill();
+                    }
+
+                    // tick marks
                     const x1 = cx + (R - 12) * Math.cos(angle);
                     const y1 = cy + (R - 12) * Math.sin(angle);
                     const x2 = cx + (R + 4) * Math.cos(angle);
@@ -376,15 +553,15 @@
                     ctx.moveTo(x1, y1);
                     ctx.lineTo(x2, y2);
                     ctx.strokeStyle = isDark ? '#94a3b8' : '#334155';
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = (i === nearestIdx) ? 2 : 1;
                     ctx.stroke();
 
-                    // letter (only for every 2nd to keep clean)
+                    // letter (only every 2nd)
                     if (i % 2 === 0) {
-                        const xText = cx + (R - 22) * Math.cos(angle);
-                        const yText = cy + (R - 22) * Math.sin(angle) + 5;
-                        ctx.font = '12px "Times New Roman", serif';
-                        ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+                        const xText = cx + (R - 24) * Math.cos(angle);
+                        const yText = cy + (R - 24) * Math.sin(angle) + 5;
+                        ctx.font = '11px "Times New Roman", serif';
+                        ctx.fillStyle = (i === nearestIdx) ? (isDark ? '#e2e8f0' : '#0f172a') : (isDark ? '#64748b' : '#94a3b8');
                         ctx.textAlign = 'center';
                         ctx.fillText(HEBREW[i], xText, yText);
                     }
@@ -397,7 +574,7 @@
                 const secondAngle = getAngle(SECOND_PERIOD, t) - 90;
                 const subaruAngle = getAngle(SUBARU_PERIOD, t) - 90;
 
-                // hour hand
+                // hour
                 let hx = cx + R * 0.5 * Math.cos(hourAngle * Math.PI/180);
                 let hy = cy + R * 0.5 * Math.sin(hourAngle * Math.PI/180);
                 ctx.beginPath();
@@ -407,7 +584,7 @@
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                // minute hand
+                // minute
                 let mx = cx + R * 0.7 * Math.cos(minuteAngle * Math.PI/180);
                 let my = cy + R * 0.7 * Math.sin(minuteAngle * Math.PI/180);
                 ctx.beginPath();
@@ -417,7 +594,7 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // second hand
+                // second
                 let sx = cx + R * 0.85 * Math.cos(secondAngle * Math.PI/180);
                 let sy = cy + R * 0.85 * Math.sin(secondAngle * Math.PI/180);
                 ctx.beginPath();
@@ -427,9 +604,8 @@
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
 
-                // ----- SUBARU HAND (inner circle) -----
-                const subR = R * 0.45;
-                // subaru circle
+                // ----- SUBARU HAND (inner) -----
+                const subR = R * 0.40;
                 ctx.beginPath();
                 ctx.arc(cx, cy, subR, 0, 2 * Math.PI);
                 ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
@@ -438,7 +614,6 @@
                 ctx.stroke();
                 ctx.setLineDash([]);
 
-                // subaru hand
                 let subx = cx + subR * 0.85 * Math.cos(subaruAngle * Math.PI/180);
                 let suby = cy + subR * 0.85 * Math.sin(subaruAngle * Math.PI/180);
                 ctx.beginPath();
@@ -448,77 +623,144 @@
                 ctx.lineWidth = 1.5;
                 ctx.stroke();
 
-                // subaru center dot
                 ctx.beginPath();
                 ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
                 ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
                 ctx.fill();
 
-                // ----- Update subaru counter -----
+                // ----- Update subaru counter (silent) -----
                 const newSubaruAngle = getAngle(SUBARU_PERIOD, t);
-                if (newSubaruAngle < prevSubaruAngle) {
-                    subaruRotations++;
-                }
+                if (newSubaruAngle < prevSubaruAngle) subaruRotations++;
                 prevSubaruAngle = newSubaruAngle;
-                subaruCounter.textContent = subaruRotations;
 
-                // ----- Update info panel -----
-                const nowMinutes = (t % 86400) / 60;
-                const nearestIdx = findNearestOverlap(nowMinutes);
+                // ----- Update caption -----
                 const portal = OVERLAPS[nearestIdx];
                 currentHeb.textContent = portal.hebrew;
                 currentName.textContent = portal.name;
+                currentTime.textContent = portal.display;
 
-                // next portal countdown
-                let nextIdx = (nearestIdx + 1) % 22;
-                let nextTime = OVERLAPS[nextIdx].totalMinutes;
-                if (nextTime < nowMinutes) nextTime += 24 * 60;
-                const diffSec = (nextTime - nowMinutes) * 60;
-                nextCountdown.textContent = formatTime(diffSec);
-
-                // Highlight current portal in list
+                // highlight portal in grid if open
                 document.querySelectorAll('.portal-item').forEach((el, i) => {
                     el.classList.toggle('current', i === nearestIdx);
                 });
             }
 
-            // ----- PORTAL LIST -----
-            function buildPortalList() {
-                portalList.innerHTML = '';
+            // ----- PORTAL LIST (modal) -----
+            function buildPortalGrid() {
+                portalGrid.innerHTML = '';
                 OVERLAPS.forEach((p, i) => {
                     const div = document.createElement('div');
                     div.className = 'portal-item';
-                    div.innerHTML = `<div class="hebrew">${p.hebrew}</div><div>${p.display}</div>`;
+                    div.innerHTML = `<div class="p-hebrew">${p.hebrew}</div><div class="p-time">${p.display}</div>`;
                     div.addEventListener('click', () => {
                         frozen = true;
                         frozenTime = p.totalMinutes * 60;
-                        drawClock(frozenTime);
+                        realMode = false;
+                        realBtn.classList.remove('active');
+                        nextBtn.classList.add('active');
+                        closeModal('portalsModal');
                     });
-                    portalList.appendChild(div);
+                    portalGrid.appendChild(div);
                 });
             }
 
-            // ----- TOGGLE HANDLERS -----
-            mode24.addEventListener('click', () => {
-                mode = '24h';
-                mode24.classList.add('active');
-                mode22.classList.remove('active');
-            });
-            mode22.addEventListener('click', () => {
-                mode = '22h';
-                mode22.classList.add('active');
-                mode24.classList.remove('active');
+            // ----- MODAL CONTROLS -----
+            function openModal(id) {
+                document.getElementById(id).classList.add('open');
+            }
+
+            function closeModal(id) {
+                document.getElementById(id).classList.remove('open');
+            }
+
+            closeBtns.forEach(btn => {
+                btn.addEventListener('click', () => closeModal(btn.dataset.close));
             });
 
-            darkToggle.addEventListener('click', () => {
-                dark = !dark;
-                darkToggle.textContent = dark ? '☀' : '☾';
+            // Pull tab: open settings on tap, portals on swipe-up? For simplicity: tap opens settings, long-press opens portals? We'll use double-tap.
+            let pullTapCount = 0;
+            let pullTapTimer;
+            pullTab.addEventListener('click', () => {
+                pullTapCount++;
+                if (pullTapCount === 1) {
+                    pullTapTimer = setTimeout(() => {
+                        if (pullTapCount === 1) openModal('settingsModal');
+                        pullTapCount = 0;
+                    }, 300);
+                } else if (pullTapCount === 2) {
+                    clearTimeout(pullTapTimer);
+                    openModal('portalsModal');
+                    pullTapCount = 0;
+                }
+            });
+
+            // Also allow tap on clock to freeze/unfreeze
+            canvas.addEventListener('click', () => {
+                frozen = !frozen;
+                if (frozen) {
+                    frozenTime = performance.now() / 1000;
+                    realBtn.classList.remove('active');
+                    nextBtn.classList.add('active');
+                } else {
+                    frozenTime = null;
+                    realBtn.classList.add('active');
+                    nextBtn.classList.remove('active');
+                }
+            });
+
+            // ----- KNOBS -----
+            realBtn.addEventListener('click', () => {
+                realMode = true;
+                frozen = false;
+                frozenTime = null;
+                realBtn.classList.add('active');
+                nextBtn.classList.remove('active');
+            });
+
+            nextBtn.addEventListener('click', () => {
+                realMode = false;
+                frozen = true;
+                const now = performance.now() / 1000;
+                const nowMinutes = (now % 86400) / 60;
+                const nextIdx = findNextOverlap(nowMinutes);
+                frozenTime = OVERLAPS[nextIdx].totalMinutes * 60;
+                // add a small offset to show the portal time
+                realBtn.classList.remove('active');
+                nextBtn.classList.add('active');
+            });
+
+            // ----- SETTINGS TOGGLES -----
+            themeLight.addEventListener('click', () => {
+                dark = false;
+                themeLight.classList.add('active');
+                themeDark.classList.remove('active');
+                updateTheme();
+            });
+            themeDark.addEventListener('click', () => {
+                dark = true;
+                themeDark.classList.add('active');
+                themeLight.classList.remove('active');
+                updateTheme();
+            });
+
+            scale24.addEventListener('click', () => {
+                mode = '24h';
+                scale24.classList.add('active');
+                scale22.classList.remove('active');
+            });
+            scale22.addEventListener('click', () => {
+                mode = '22h';
+                scale22.classList.add('active');
+                scale24.classList.remove('active');
+            });
+
+            function updateTheme() {
                 document.documentElement.style.setProperty('--bg', dark ? '#0f172a' : '#f8fafc');
                 document.documentElement.style.setProperty('--text', dark ? '#e2e8f0' : '#1e293b');
                 document.documentElement.style.setProperty('--border', dark ? '#334155' : '#cbd5e1');
                 document.documentElement.style.setProperty('--subaru', dark ? '#8193b2' : '#64748b');
                 document.documentElement.style.setProperty('--shadow', dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)');
-            });
+            }
 
             // ----- ANIMATION LOOP -----
             function tick() {
@@ -526,26 +768,43 @@
                 if (frozen && frozenTime !== null) {
                     t = frozenTime;
                 } else {
-                    t = performance.now() / 1000;
+                    // real time with offset
+                    const now = performance.now() / 1000;
+                    t = now + (getCurrentTimeSeconds() - (now % 86400));
+                    // keep t within 24h
+                    t = t % 86400;
                 }
                 drawClock(t);
                 requestAnimationFrame(tick);
             }
 
             // ----- INIT -----
-            buildPortalList();
+            buildPortalGrid();
+            // set initial offset so real time matches system clock
+            const now = performance.now() / 1000;
+            const systemSeconds = getCurrentTimeSeconds();
+            realOffset = systemSeconds - (now % 86400);
+            // start
             tick();
 
-            // Click on clock to freeze/unfreeze
-            canvas.addEventListener('click', () => {
-                frozen = !frozen;
-                if (frozen) {
-                    frozenTime = performance.now() / 1000;
-                } else {
-                    frozenTime = null;
-                }
+            // close modals on background click
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('open');
+                    }
+                });
+            });
+
+            // Prevent body scroll when modal open
+            document.querySelectorAll('.modal-overlay').forEach(m => {
+                m.addEventListener('touchmove', (e) => {
+                    if (e.target.closest('.modal-sheet')) return;
+                    e.preventDefault();
+                }, { passive: false });
             });
         })();
     </script>
+
 </body>
 </html>
