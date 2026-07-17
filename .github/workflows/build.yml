@@ -21,10 +21,15 @@ jobs:
       - name: Install dependencies
         run: npm install --omit=optional --ignore-scripts
 
-      # CRITICAL: Add Android platform BEFORE sync
-      # - name: Add Android platform
-        # run: npx cap add android
+      # Remove existing android folder if present
+      - name: Clean up android folder
+        run: rm -rf android/
 
+      # Add Android platform fresh
+      - name: Add Android platform
+        run: npx cap add android
+
+      # Sync Capacitor (copies web assets into Android project)
       - name: Sync Capacitor
         run: npx cap sync
 
