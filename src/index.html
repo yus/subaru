@@ -1,58 +1,551 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>🍥 Subaru</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🍥 Subaru · Sacred Portals</title>
+    <style>
+        /* ----- yusdesign B&W core ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --border: #cbd5e1;
+            --accent: #334155;
+            --subaru: #64748b;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --text: #e2e8f0;
+                --border: #334155;
+                --accent: #94a3b8;
+                --subaru: #8193b2;
+                --shadow: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', 'SF Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* ----- Header (settings row) ----- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            font-size: 0.8rem;
+        }
+
+        .settings {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .settings button,
+        .settings .toggle {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.1s;
+        }
+
+        .settings button.active,
+        .settings .toggle.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        .settings button:hover,
+        .settings .toggle:hover {
+            background: var(--border);
+        }
+
+        /* ----- Clock container ----- */
+        .clock-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        #mainClock {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: var(--bg);
+        }
+
+        /* ----- Info panel (below clock) ----- */
+        .info-panel {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 0.5rem;
+            padding: 0.8rem;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-item .label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: var(--subaru);
+            letter-spacing: 1px;
+        }
+
+        .info-item .value {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .info-item .value.hebrew {
+            font-family: 'Times New Roman', serif;
+            font-size: 2rem;
+        }
+
+        /* ----- Portal list (scrollable) ----- */
+        .portal-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.3rem;
+        }
+
+        .portal-item {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+
+        .portal-item:hover {
+            background: var(--border);
+        }
+
+        .portal-item.current {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+
+        .portal-item .hebrew {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+        }
+
+        /* ----- Subaru counter (footer) ----- */
+        .subaru-footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            font-size: 0.7rem;
+            color: var(--subaru);
+        }
+
+        /* ----- Scrollbar ----- */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--subaru);
+        }
+    </style>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header class="row">
-      <span>🍥 subaru</span>
-      <button id="darkToggle">☾ dark</button>
-    </header>
+    <div class="container">
+        <!-- Header: settings -->
+        <div class="header">
+            <span>🍥 subaru · portals</span>
+            <div class="settings">
+                <button class="active" id="mode24">24h</button>
+                <button id="mode22">22h</button>
+                <button class="toggle active" id="darkToggle">☾</button>
+            </div>
+        </div>
 
-    <!-- Watch -->
-    <canvas id="watch" width="500" height="500"></canvas>
+        <!-- Clock -->
+        <div class="clock-wrapper">
+            <canvas id="mainClock" width="600" height="600"></canvas>
+        </div>
 
-    <!-- Knobs -->
-    <div class="row knobs">
-      <div class="group">
-        <button id="modeHeb" class="active">עברית</button>
-        <button id="modeGk">Ελληνικά</button>
-      </div>
-      <div class="group">
-        <button id="playBtn" class="active">▶</button>
-        <button id="stopBtn">⏸</button>
-      </div>
+        <!-- Info panel -->
+        <div class="info-panel">
+            <div class="info-item">
+                <div class="label">current portal</div>
+                <div class="value hebrew" id="currentHeb">א</div>
+                <div style="font-size:0.7rem; color:var(--subaru);" id="currentName">Aleph</div>
+            </div>
+            <div class="info-item">
+                <div class="label">next in</div>
+                <div class="value" id="nextCountdown">01:05:27</div>
+            </div>
+            <div class="info-item">
+                <div class="label">subaru</div>
+                <div class="value" id="subaruCounter">0</div>
+                <div style="font-size:0.6rem; color:var(--subaru);">rotations</div>
+            </div>
+        </div>
+
+        <!-- Portal list -->
+        <div class="portal-list" id="portalList"></div>
+
+        <!-- Footer -->
+        <div class="subaru-footer">
+            <span>22·24</span>
+            <span>3927.27s</span>
+            <span>0.336s</span>
+            <span>✦ freeze to read</span>
+        </div>
     </div>
 
-    <!-- Glyph Square (like overlaps) -->
-    <div class="glyph-square">
-      <div class="glyph-large" id="currentGlyph">ג</div>
-      <div class="glyph-name" id="currentGlyphName">Gimel</div>
-      <div class="glyph-meaning" id="currentGlyphMeaning">Cosmic Nourishment</div>
-      <div class="glyph-time" id="currentGlyphTime">2:10:54</div>
-    </div>
+    <script>
+        (function() {
+            // ----- DATA -----
+            const HEBREW = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
+            const NAMES = [
+                'Aleph','Bet','Gimel','Dalet','He','Vav','Zayin','Chet','Tet','Yod','Kaf',
+                'Lamed','Mem','Nun','Samekh','Ayin','Pe','Tsadi','Qof','Resh','Shin','Tav'
+            ];
+            const MEANINGS = [
+                'Breath of Creation','House of Divine','Cosmic Nourishment','Doorway to Wisdom',
+                'Window to Heaven','Connecting Above','Sacred Sustenance','Life Force',
+                'Hidden Goodness','Divine Spark','Crown of Manifestation','Teaching Heart',
+                'Waters of Wisdom','Eternal Faithfulness','Divine Support','Inner Vision',
+                'Mouth of Creation','Righteous Path','Holiness in Time','Higher Consciousness',
+                'Fire of Transformation','Completion & Truth'
+            ];
 
-    <!-- Subaru Echo -->
-    <div class="subaru-echo">
-      <span>⚡ subaru · </span>
-      <span class="subaru-word" id="subaruWord">א Α A ג</span>
-      <span id="subaruState"> · 178/s</span>
-    </div>
+            // Overlap times (12/11 hour intervals)
+            const OVERLAPS = [];
+            const INTERVAL = 12/11; // hours
+            for (let i = 0; i < 22; i++) {
+                const totalMin = i * INTERVAL * 60;
+                const h = Math.floor(totalMin / 60) % 24;
+                const m = Math.floor(totalMin % 60);
+                const s = Math.floor((totalMin % 1) * 60);
+                OVERLAPS.push({
+                    index: i,
+                    hebrew: HEBREW[i],
+                    name: NAMES[i],
+                    meaning: MEANINGS[i],
+                    hours: h,
+                    minutes: m,
+                    seconds: s,
+                    totalMinutes: totalMin,
+                    display: `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`
+                });
+            }
 
-    <!-- Footer -->
-    <footer class="row">
-      <span>22·24</span>
-      <span>3927.27s</span>
-      <span>0.336s</span>
-      <span>✦ freeze to read</span>
-    </footer>
-  </div>
+            // ----- STATE -----
+            let mode = '24h'; // '24h' or '22h'
+            let dark = false;
+            let frozen = false;
+            let frozenTime = null;
+            let subaruRotations = 0;
+            let prevSubaruAngle = 0;
 
-  <script src="script.js"></script>
+            // DOM refs
+            const canvas = document.getElementById('mainClock');
+            const ctx = canvas.getContext('2d');
+            const currentHeb = document.getElementById('currentHeb');
+            const currentName = document.getElementById('currentName');
+            const nextCountdown = document.getElementById('nextCountdown');
+            const subaruCounter = document.getElementById('subaruCounter');
+            const portalList = document.getElementById('portalList');
+            const mode24 = document.getElementById('mode24');
+            const mode22 = document.getElementById('mode22');
+            const darkToggle = document.getElementById('darkToggle');
+
+            // ----- CONSTANTS -----
+            const SUBARU_PERIOD = 0.336; // seconds per rotation
+            const HOUR_24_PERIOD = 12 * 3600; // 12h for hour hand
+            const HOUR_22_PERIOD = 3927.27 * 22; // 22 * your constant
+            const MINUTE_PERIOD = 3600; // 1h
+            const SECOND_PERIOD = 60;
+
+            // ----- HELPERS -----
+            function getAngle(period, t) {
+                return ((t % period) / period) * 360;
+            }
+
+            function getLetterIndex(angleDeg, count) {
+                return Math.floor((angleDeg % 360) / 360 * count) % count;
+            }
+
+            function findNearestOverlap(minutes) {
+                let best = 0;
+                let bestDiff = Infinity;
+                for (let i = 0; i < OVERLAPS.length; i++) {
+                    const diff = Math.abs(OVERLAPS[i].totalMinutes - minutes);
+                    if (diff < bestDiff) {
+                        bestDiff = diff;
+                        best = i;
+                    }
+                }
+                return best;
+            }
+
+            function formatTime(seconds) {
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = Math.floor(seconds % 60);
+                return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            }
+
+            // ----- DRAWING -----
+            function drawClock(t) {
+                const w = canvas.width, h = canvas.height;
+                const cx = w/2, cy = h/2;
+                const R = Math.min(w, h) * 0.42;
+                const isDark = dark;
+
+                ctx.clearRect(0, 0, w, h);
+
+                // background
+                ctx.fillStyle = isDark ? '#0f172a' : '#f8fafc';
+                ctx.fillRect(0, 0, w, h);
+
+                // outer circle
+                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, 2 * Math.PI);
+                ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 22 marks (Hebrew letters)
+                const count = 22;
+                for (let i = 0; i < count; i++) {
+                    const angle = (i / count) * 2 * Math.PI - Math.PI/2;
+                    const x1 = cx + (R - 12) * Math.cos(angle);
+                    const y1 = cy + (R - 12) * Math.sin(angle);
+                    const x2 = cx + (R + 4) * Math.cos(angle);
+                    const y2 = cy + (R + 4) * Math.sin(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.strokeStyle = isDark ? '#94a3b8' : '#334155';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // letter (only for every 2nd to keep clean)
+                    if (i % 2 === 0) {
+                        const xText = cx + (R - 22) * Math.cos(angle);
+                        const yText = cy + (R - 22) * Math.sin(angle) + 5;
+                        ctx.font = '12px "Times New Roman", serif';
+                        ctx.fillStyle = isDark ? '#e2e8f0' : '#1e293b';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(HEBREW[i], xText, yText);
+                    }
+                }
+
+                // ----- HANDS -----
+                const hourPeriod = mode === '24h' ? HOUR_24_PERIOD : HOUR_22_PERIOD;
+                const hourAngle = getAngle(hourPeriod, t) - 90;
+                const minuteAngle = getAngle(MINUTE_PERIOD, t) - 90;
+                const secondAngle = getAngle(SECOND_PERIOD, t) - 90;
+                const subaruAngle = getAngle(SUBARU_PERIOD, t) - 90;
+
+                // hour hand
+                let hx = cx + R * 0.5 * Math.cos(hourAngle * Math.PI/180);
+                let hy = cy + R * 0.5 * Math.sin(hourAngle * Math.PI/180);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(hx, hy);
+                ctx.strokeStyle = isDark ? '#e2e8f0' : '#0f172a';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // minute hand
+                let mx = cx + R * 0.7 * Math.cos(minuteAngle * Math.PI/180);
+                let my = cy + R * 0.7 * Math.sin(minuteAngle * Math.PI/180);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(mx, my);
+                ctx.strokeStyle = isDark ? '#94a3b8' : '#475569';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // second hand
+                let sx = cx + R * 0.85 * Math.cos(secondAngle * Math.PI/180);
+                let sy = cy + R * 0.85 * Math.sin(secondAngle * Math.PI/180);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(sx, sy);
+                ctx.strokeStyle = isDark ? '#8193b2' : '#64748b';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // ----- SUBARU HAND (inner circle) -----
+                const subR = R * 0.45;
+                // subaru circle
+                ctx.beginPath();
+                ctx.arc(cx, cy, subR, 0, 2 * Math.PI);
+                ctx.strokeStyle = isDark ? '#334155' : '#cbd5e1';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // subaru hand
+                let subx = cx + subR * 0.85 * Math.cos(subaruAngle * Math.PI/180);
+                let suby = cy + subR * 0.85 * Math.sin(subaruAngle * Math.PI/180);
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(subx, suby);
+                ctx.strokeStyle = isDark ? '#e2e8f0' : '#0f172a';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // subaru center dot
+                ctx.beginPath();
+                ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+                ctx.fillStyle = isDark ? '#e2e8f0' : '#0f172a';
+                ctx.fill();
+
+                // ----- Update subaru counter -----
+                const newSubaruAngle = getAngle(SUBARU_PERIOD, t);
+                if (newSubaruAngle < prevSubaruAngle) {
+                    subaruRotations++;
+                }
+                prevSubaruAngle = newSubaruAngle;
+                subaruCounter.textContent = subaruRotations;
+
+                // ----- Update info panel -----
+                const nowMinutes = (t % 86400) / 60;
+                const nearestIdx = findNearestOverlap(nowMinutes);
+                const portal = OVERLAPS[nearestIdx];
+                currentHeb.textContent = portal.hebrew;
+                currentName.textContent = portal.name;
+
+                // next portal countdown
+                let nextIdx = (nearestIdx + 1) % 22;
+                let nextTime = OVERLAPS[nextIdx].totalMinutes;
+                if (nextTime < nowMinutes) nextTime += 24 * 60;
+                const diffSec = (nextTime - nowMinutes) * 60;
+                nextCountdown.textContent = formatTime(diffSec);
+
+                // Highlight current portal in list
+                document.querySelectorAll('.portal-item').forEach((el, i) => {
+                    el.classList.toggle('current', i === nearestIdx);
+                });
+            }
+
+            // ----- PORTAL LIST -----
+            function buildPortalList() {
+                portalList.innerHTML = '';
+                OVERLAPS.forEach((p, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'portal-item';
+                    div.innerHTML = `<div class="hebrew">${p.hebrew}</div><div>${p.display}</div>`;
+                    div.addEventListener('click', () => {
+                        frozen = true;
+                        frozenTime = p.totalMinutes * 60;
+                        drawClock(frozenTime);
+                    });
+                    portalList.appendChild(div);
+                });
+            }
+
+            // ----- TOGGLE HANDLERS -----
+            mode24.addEventListener('click', () => {
+                mode = '24h';
+                mode24.classList.add('active');
+                mode22.classList.remove('active');
+            });
+            mode22.addEventListener('click', () => {
+                mode = '22h';
+                mode22.classList.add('active');
+                mode24.classList.remove('active');
+            });
+
+            darkToggle.addEventListener('click', () => {
+                dark = !dark;
+                darkToggle.textContent = dark ? '☀' : '☾';
+                document.documentElement.style.setProperty('--bg', dark ? '#0f172a' : '#f8fafc');
+                document.documentElement.style.setProperty('--text', dark ? '#e2e8f0' : '#1e293b');
+                document.documentElement.style.setProperty('--border', dark ? '#334155' : '#cbd5e1');
+                document.documentElement.style.setProperty('--subaru', dark ? '#8193b2' : '#64748b');
+                document.documentElement.style.setProperty('--shadow', dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)');
+            });
+
+            // ----- ANIMATION LOOP -----
+            function tick() {
+                let t;
+                if (frozen && frozenTime !== null) {
+                    t = frozenTime;
+                } else {
+                    t = performance.now() / 1000;
+                }
+                drawClock(t);
+                requestAnimationFrame(tick);
+            }
+
+            // ----- INIT -----
+            buildPortalList();
+            tick();
+
+            // Click on clock to freeze/unfreeze
+            canvas.addEventListener('click', () => {
+                frozen = !frozen;
+                if (frozen) {
+                    frozenTime = performance.now() / 1000;
+                } else {
+                    frozenTime = null;
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
