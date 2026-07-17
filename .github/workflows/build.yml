@@ -13,14 +13,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 22 LTS
+      - name: Setup Node.js (use runner default)
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # No version specified → uses Node 24 (runner default)
           cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Install dependencies (skip optional)
-        run: npm install --omit=optional
+      - name: Install dependencies (skip optional, ignore lock file mismatch)
+        run: npm ci --omit=optional --ignore-scripts
 
       - name: Sync Capacitor
         run: npx cap sync
