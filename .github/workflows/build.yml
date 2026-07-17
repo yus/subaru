@@ -22,8 +22,8 @@ jobs:
         run: npm install --omit=optional --ignore-scripts
 
       # CRITICAL: Add Android platform BEFORE sync
-      - name: Add Android platform
-        run: npx cap add android
+      # - name: Add Android platform
+        # run: npx cap add android
 
       - name: Sync Capacitor
         run: npx cap sync
