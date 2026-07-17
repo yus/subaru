@@ -1,0 +1,63 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies (skip optional)
+        run: npm install --omit=optional
+
+      - name: Sync Capacitor
+        run: npx cap sync
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Generate icons (using rsvg-convert)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+          mkdir -p android/app/src/main/res
+          # Generate all sizes (simplified for CI)
+          for size in 48 72 96 144 192; do
+            folder="mipmap-${size}dpi"
+            [ $size -eq 48 ] && folder="mipmap-mdpi"
+            [ $size -eq 72 ] && folder="mipmap-hdpi"
+            [ $size -eq 96 ] && folder="mipmap-xhdpi"
+            [ $size -eq 144 ] && folder="mipmap-xxhdpi"
+            [ $size -eq 192 ] && folder="mipmap-xxxhdpi"
+            mkdir -p android/app/src/main/res/$folder
+            rsvg-convert -w $size -h $size public/icon.svg > android/app/src/main/res/$folder/ic_launcher.png
+            rsvg-convert -w $size -h $size public/icon.svg > android/app/src/main/res/$folder/ic_launcher_round.png
+          done
+
+      - name: Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: subaru-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
