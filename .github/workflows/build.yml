@@ -13,35 +13,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Force Node 24 explicitly (and cache it)
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          # cache: 'npm'
-          # cache-dependency-path: '**/package-lock.json'
 
-      # Install dependencies (skip optional, ignore scripts to avoid sharp)
-      - name: Install dependencies
-        run: npm ci --omit=optional --ignore-scripts
+      - name: Install dependencies (generate lock file if needed)
+        run: npm install --omit=optional --ignore-scripts
 
-      # Sync Capacitor (this will generate the android/ folder)
       - name: Sync Capacitor
         run: npx cap sync
 
-      # Setup Java
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # Generate icons (using rsvg-convert)
-      - name: Generate icons
+      - name: Generate icons (using rsvg-convert)
         run: |
           sudo apt-get update
           sudo apt-get install -y librsvg2-bin
@@ -59,14 +51,12 @@ jobs:
             rsvg-convert -w $size -h $size public/icon.svg > android/app/src/main/res/$folder/ic_launcher_round.png
           done
 
-      # Build Android APK
       - name: Build Android APK
         run: |
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      # Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
