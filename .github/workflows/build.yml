@@ -8,14 +8,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 22 LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies (skip optional)
         run: npm install --omit=optional
@@ -37,14 +39,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y librsvg2-bin
           mkdir -p android/app/src/main/res
-          # Generate all sizes (simplified for CI)
           for size in 48 72 96 144 192; do
-            folder="mipmap-${size}dpi"
-            [ $size -eq 48 ] && folder="mipmap-mdpi"
-            [ $size -eq 72 ] && folder="mipmap-hdpi"
-            [ $size -eq 96 ] && folder="mipmap-xhdpi"
-            [ $size -eq 144 ] && folder="mipmap-xxhdpi"
-            [ $size -eq 192 ] && folder="mipmap-xxxhdpi"
+            case $size in
+              48) folder="mipmap-mdpi" ;;
+              72) folder="mipmap-hdpi" ;;
+              96) folder="mipmap-xhdpi" ;;
+              144) folder="mipmap-xxhdpi" ;;
+              192) folder="mipmap-xxxhdpi" ;;
+            esac
             mkdir -p android/app/src/main/res/$folder
             rsvg-convert -w $size -h $size public/icon.svg > android/app/src/main/res/$folder/ic_launcher.png
             rsvg-convert -w $size -h $size public/icon.svg > android/app/src/main/res/$folder/ic_launcher_round.png
